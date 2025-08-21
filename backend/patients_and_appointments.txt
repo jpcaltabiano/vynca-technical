@@ -1,0 +1,13 @@
+patient_id,first_name,last_name,dob,email,phone,address,appointment_id,appointment_date,appointment_type
+1, john ,Doe ,01/14/1980,john.doe[at]email.com,1234567890,"123 Elm St, Springfield",101,2024-11-02,Follow-up
+2,Jane,Smith,1985-03-22,jane.smith@email,555-1223,"45 Oak Street",102,11/04/2024,New Patient
+3,Bob,Johnson,07-30-1972,bob.johnson@email.com,999999999,"789 Pine Rd",103,2024/11/05,Annual Exam
+4,  ,Lee,1990-02-15,lee@email.com,,,"",,,
+5,Susan, O'connor ,03/10/1983,susan.o'connor@email.com,(888) 456-7890,"1600 Vine, Apt 5",104,11-06-2024,Checkup
+6,Michael,BROWN,April 25 1977,,+1-234-555-6789,"890 Maple St",105,2024-11-07,Follow-up
+3,Bob,Johnson,07-30-1972,bob.johnson@email.com,999999999,"789 Pine Rd",106,2024-11-08,Lab Results
+7,Alice,Wu,1999/12/31,alicewu@gmail.com,333.444.5555,"1010 Birch Ln",107,2024-11-10,New Patient
+8,José,Martínez,1982-05-05,jose.martinez@email.com,444-8888,"202 Palm Blvd",108,2024-11-12,Follow-up
+9,Mary-Kate,Olsen,1986-06-13,marykate@olsen.org,123-456-7890,"12 Sunset Way",109,,Consult
+10,Ann,,1975-09-09,ann.email.com,123456,"15 Unknown Rd",110,2024-11-15,
+11,Tommy,Lee,1992-02-29,tlee@email.com,5551234567,"500 Edgewater Blvd",111,2024-11-16,Consult
