@@ -10,9 +10,7 @@
 # some missing appointment_id
 # appointment dates also in different formats, handle w generic helper
 
-# start with some helper funcs to handle the data
-# generalize when possible
-# on FE, put a flag on patients missing large amounts of critical data
+# on FE, put a flag on patients missing large amounts of critical data ?
 
 import csv
 import re
