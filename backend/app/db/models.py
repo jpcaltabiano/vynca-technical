@@ -19,10 +19,14 @@ class Patient(Base):
     email = Column(String, unique=True, index=True) # email
     phone = Column(String, nullable=True) # phone
     address = Column(String, nullable=True) # address
-    appointments = relationship("Appointment", back_populates="patient")
+    appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan") # cascade delete appointments when patient is deleted
 
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4) # appointment_id
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    appointment_id = Column(String, unique=True, index=True) # appointment_id
     appointment_date = Column(DateTime) # appointment_date
+    appointment_type = Column(String, nullable=True) # appointment_type
+    patient_uuid = Column(UUID(as_uuid=True), ForeignKey("patients.id"))
+    patient = relationship("Patient", back_populates="appointments")
