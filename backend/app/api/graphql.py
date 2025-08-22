@@ -62,10 +62,9 @@ class Query:
         from sqlalchemy.ext.asyncio import AsyncSession
 
         session: AsyncSession = info.context["db_session"]
-        id_bytes = id.bytes
         result = await session.execute(
             select(PatientModel)
-            .where(PatientModel.id == id_bytes)
+            .where(PatientModel.id == id)
             .options(selectinload(PatientModel.appointments))
         )
         return result.scalars().first()
