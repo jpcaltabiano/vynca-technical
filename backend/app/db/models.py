@@ -3,6 +3,7 @@
 import uuid
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
+# future work -> update sqlalchemy and use types.Uuid
 from sqlalchemy.dialects.postgresql import UUID
 from .database import Base
 
@@ -16,7 +17,7 @@ class Patient(Base):
     first_name = Column(String, nullable=True, index=True)
     last_name = Column(String, index=True)
     dob = Column(Date)
-    email = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True) # future work -> should not be unique
     phone = Column(String, nullable=True)
     address = Column(String, nullable=True)
     is_complete = Column(Boolean, default=False) # flag to show if the patient is missing critical data
