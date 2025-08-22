@@ -12,6 +12,7 @@
 
 # on FE, put a flag on patients missing large amounts of critical data ?
 
+import os
 from typing import Optional
 import csv
 import re
@@ -26,9 +27,13 @@ def _clean_email(value: Optional[str]) -> Optional[str]:
 	if value is None:
 		return None
 	s = str(value).strip().lower()
-	if not s or s in {"none", "unknown", "email"}:
+	if not s:
 		return None
+	# convert all formats to'@'
 	s = s.replace("[at]", "@").replace("(at)", "@")
+	# require an '@' else return None
+	if "@" not in s:
+		return None
 	return s
 
 
@@ -129,20 +134,8 @@ def _parse_human_date(value: Optional[object]):
 
 	return None
 
-
-def _has_area_code(phone_value: Optional[str]) -> bool:
-	if not phone_value:
-		return False
-	digits = re.sub(r"\D", "", str(phone_value))
-	if len(digits) == 11 and digits.startswith("1"):
-		return True
-	if len(digits) == 10:
-		return True
-	return False
-
-
 def _is_complete_patient(values: dict) -> bool:
-	# completeness: required last_name, dob; contact: email OR phone with area code/international; and patient_id
+	# completeness: required last_name, dob; contact: valid email OR valid phone; and patient_id
     # allows for setting the is_complete flag on the patient object,
     # which can be used on the FE to flag patients missing large amounts of critical data
 	patient_id = (values.get("patient_id") or "").strip()
@@ -154,7 +147,10 @@ def _is_complete_patient(values: dict) -> bool:
 		return False
 	if not last_name or not dob:
 		return False
-	if not (email or _has_area_code(phone)):
+	# check if phone is contactable - missing area code is not contactable
+	digits = re.sub(r"\D", "", str(phone or ""))
+	contactable_phone = (len(digits) == 10) or (len(digits) == 11 and digits.startswith("1"))
+	if not (email or contactable_phone):
 		return False
 	return True
 
@@ -234,5 +230,6 @@ class AppointmentData(BaseModel):
 	def _validate_appointment_date(cls, v):
 		return _parse_human_date(v)
 
-def ingest_patients_from_csv(file_path: str):
-	return
+def ingest_patients_from_csv(session: AsyncSession):
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    csv_file_path = os.path.join(BASE_DIR, "patients_and_appointments.txt")
