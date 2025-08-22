@@ -162,7 +162,7 @@ def _is_complete_patient(values: dict) -> bool:
 class PatientData(BaseModel):
 	patient_id: str
 	first_name: Optional[str]
-	last_name: str
+	last_name: Optional[str]
 	dob: Optional[datetime.date]
 	email: Optional[EmailStr]
 	phone: Optional[str]
@@ -185,9 +185,9 @@ class PatientData(BaseModel):
 	@validator("last_name", pre=True)
 	def _normalize_last_name(cls, v):
 		if v is None:
-			return v
+			return None
 		s = str(v).strip()
-		return s.title()
+		return s.title() if s else None
 
 	@validator("email", pre=True)
 	def _validate_email(cls, v):
@@ -204,12 +204,6 @@ class PatientData(BaseModel):
 	@validator("dob", pre=True)
 	def _validate_dob(cls, v):
 		return _parse_human_date(v)
-
-	@model_validator(mode="after")
-	def _set_is_complete(cls, values):
-		values["is_complete"] = _is_complete_patient(values)
-		return values
-
 
 class AppointmentData(BaseModel):
 	appointment_id: Optional[str]
@@ -234,7 +228,10 @@ class AppointmentData(BaseModel):
 	def _validate_appointment_date(cls, v):
 		return _parse_human_date(v)
 
-async def ingest_patients_from_csv(session: AsyncSession, path: str):
+async def ingest_patients_from_csv(session: AsyncSession):
+    # Hardcode path to the CSV file in the backend directory
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    path = os.path.join(BASE_DIR, "patients_and_appointments.txt")
 
     def _shape_row(raw, n=10):
         if len(raw) > n:
@@ -270,6 +267,14 @@ async def ingest_patients_from_csv(session: AsyncSession, path: str):
 
                 # ensure one patient per external id
                 if patient.patient_id not in patients_by_id:
+                    is_complete = _is_complete_patient({
+                        "patient_id": (patient.patient_id or "").strip(),
+                        "last_name": patient.last_name,
+                        "dob": patient.dob,
+                        "email": patient.email,
+                        "phone": patient.phone,
+                    })
+
                     new_patient = PatientModel(
                         patient_id=patient.patient_id,
                         first_name=patient.first_name,
@@ -278,7 +283,7 @@ async def ingest_patients_from_csv(session: AsyncSession, path: str):
                         email=patient.email,
                         phone=patient.phone,
                         address=patient.address,
-                        is_complete=patient.is_complete,
+                        is_complete=is_complete,
                     )
                     session.add(new_patient)
                     patients_by_id[patient.patient_id] = new_patient

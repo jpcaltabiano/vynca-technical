@@ -1,2 +1,5 @@
 .venv
 plan.md
+__pycache__
+*.db
+backend/app.db
