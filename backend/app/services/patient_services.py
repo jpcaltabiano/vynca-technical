@@ -1,17 +1,3 @@
-## A file containing helper functions for loading and cleaning the data
-# things to do:
-# names not capitalized, leading/trailing spaces
-# dates in multiple formats, including european and american
-    # convert all to one format, determine how to handle euro dates when ambiguous
-# emails contain diff formats, @/[at], some domains have one part or are "email"
-# phones numbers have diff formats, dashes/slashes, int format, not real phone numbers (less than 10 digits)
-# most addresses contain only street, assume correct format. malformed ones include a extra comma and one has apt number and one has the town name
-# addresses contain diff street type format ex "st" and "street"
-# some missing appointment_id
-# appointment dates also in different formats, handle w generic helper
-
-# on FE, put a flag on patients missing large amounts of critical data ?
-
 import os
 from typing import Optional
 import csv
@@ -108,13 +94,6 @@ def _parse_human_date(value: Optional[object]):
 	if s.lower() in {"none", "unknown"}:
 		return None
 
-	# formats observed in the provided dataset:
-	# - MM/DD/YYYY
-	# - YYYY-MM-DD
-	# - MM-DD-YYYY
-	# - YYYY/MM/DD
-	# - monthname DD YYYY (e.g., April 25 1977)
-
 	# monthname DD YYYY and variations
 	for fmt in ("%B %d %Y", "%B %d, %Y", "%b %d %Y", "%b %d, %Y"):
 		try:
@@ -193,7 +172,7 @@ class PatientData(BaseModel):
 	def _validate_email(cls, v):
 		return _clean_email(v)
 
-	@validator("phone", pre=True, always=True)
+	@validator("phone", pre=True)
 	def _validate_phone(cls, v):
 		return _clean_phone(v)
 
@@ -229,7 +208,6 @@ class AppointmentData(BaseModel):
 		return _parse_human_date(v)
 
 async def ingest_patients_from_csv(session: AsyncSession):
-    # Hardcode path to the CSV file in the backend directory
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     path = os.path.join(BASE_DIR, "patients_and_appointments.txt")
 
@@ -245,7 +223,7 @@ async def ingest_patients_from_csv(session: AsyncSession):
 
         with open(path, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
-            header = next(reader, None)  # skip header
+            header = next(reader, None)
 
             for raw in reader:
                 row = _shape_row(raw, len(FIELDS))

@@ -7,6 +7,10 @@ from app.db.models import Patient as PatientModel, Appointment as AppointmentMod
 from app.db.database import get_db_session
 from app.services.patient_services import ingest_patients_from_csv
 
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
 @strawberry.type
 class Appointment:
     id: uuid.UUID
@@ -26,18 +30,6 @@ class Patient:
     address: Optional[str]
     is_complete: bool
     appointments: List[Appointment]
-
-
-    @strawberry.field
-    def name(self) -> str:
-        first_name = self.first_name if self.first_name else ""
-        return f"{first_name} {self.last_name}"
-    
-    @strawberry.field
-    def age(self) -> int:
-        if not self.dob:
-            return 0
-        return datetime.datetime.now().year - self.dob.year
     
     @strawberry.field
     def appointment_count(self) -> int:
@@ -47,9 +39,6 @@ class Patient:
 class Query:
     @strawberry.field
     async def patients(self, info) -> List[Patient]:
-        from sqlalchemy.future import select
-        from sqlalchemy.orm import selectinload
-        from sqlalchemy.ext.asyncio import AsyncSession
 
         session: AsyncSession = info.context["db_session"]
         result = await session.execute(select(PatientModel).options(selectinload(PatientModel.appointments)))
@@ -57,8 +46,6 @@ class Query:
 
     @strawberry.field
     async def appointments(self, info) -> List[Appointment]:
-        from sqlalchemy.future import select
-        from sqlalchemy.ext.asyncio import AsyncSession
 
         session: AsyncSession = info.context["db_session"]
         result = await session.execute(select(AppointmentModel))
@@ -66,9 +53,6 @@ class Query:
 
     @strawberry.field
     async def patient(self, info, id: uuid.UUID) -> Optional[Patient]:
-        from sqlalchemy.future import select
-        from sqlalchemy.orm import selectinload
-        from sqlalchemy.ext.asyncio import AsyncSession
 
         session: AsyncSession = info.context["db_session"]
         result = await session.execute(
@@ -87,7 +71,6 @@ class IngestCsvResult:
 class Mutation:
     @strawberry.mutation
     async def ingest_csv_data(self, info) -> IngestCsvResult:
-        from sqlalchemy.ext.asyncio import AsyncSession
         session: AsyncSession = info.context["db_session"]
         try:
             await ingest_patients_from_csv(session)

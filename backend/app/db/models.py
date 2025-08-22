@@ -12,13 +12,13 @@ class Patient(Base):
     # patient_id,first_name,last_name,dob,email,phone,address,appointment_id,appointment_date,appointment_type
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    patient_id = Column(String, unique=True, index=True) # patient_id
-    first_name = Column(String, nullable=True, index=True) # first_name
-    last_name = Column(String, index=True) # last_name
-    dob = Column(Date) # dob
-    email = Column(String, unique=True, index=True) # email
-    phone = Column(String, nullable=True) # phone
-    address = Column(String, nullable=True) # address
+    patient_id = Column(String, unique=True, index=True)
+    first_name = Column(String, nullable=True, index=True)
+    last_name = Column(String, index=True)
+    dob = Column(Date)
+    email = Column(String, unique=True, index=True)
+    phone = Column(String, nullable=True)
+    address = Column(String, nullable=True)
     is_complete = Column(Boolean, default=False) # flag to show if the patient is missing critical data
     appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan") # cascade delete appointments when patient is deleted
 
@@ -26,8 +26,8 @@ class Appointment(Base):
     __tablename__ = "appointments"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    appointment_id = Column(String, unique=True, index=True) # appointment_id
-    appointment_date = Column(DateTime) # appointment_date
-    appointment_type = Column(String, nullable=True) # appointment_type
+    appointment_id = Column(String, unique=True, index=True)
+    appointment_date = Column(DateTime)
+    appointment_type = Column(String, nullable=True)
     patient_uuid = Column(UUID(as_uuid=True), ForeignKey("patients.id"))
     patient = relationship("Patient", back_populates="appointments")
