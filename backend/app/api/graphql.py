@@ -56,6 +56,15 @@ class Query:
         return result.scalars().all()
 
     @strawberry.field
+    async def appointments(self, info) -> List[Appointment]:
+        from sqlalchemy.future import select
+        from sqlalchemy.ext.asyncio import AsyncSession
+
+        session: AsyncSession = info.context["db_session"]
+        result = await session.execute(select(AppointmentModel))
+        return result.scalars().all()
+
+    @strawberry.field
     async def patient(self, info, id: uuid.UUID) -> Optional[Patient]:
         from sqlalchemy.future import select
         from sqlalchemy.orm import selectinload
