@@ -1,7 +1,7 @@
 import * as React from "react";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { DataGrid, type GridColDef, type GridRowParams, type GridCellParams } from '@mui/x-data-grid';
+import { DataGrid, type GridColDef, type GridCellParams } from '@mui/x-data-grid';
 import { Modal, Box, Typography, Button } from "@mui/material";
 
 const PATIENTS_QUERY = gql`
@@ -58,9 +58,6 @@ const patientColumns: GridColDef[] = [
     { field: "firstName", headerName: "First Name", width: 110 },
     { field: "lastName", headerName: "Last Name", width: 140 },
     { field: "dob", headerName: "DOB", width: 130 },
-    { field: "email", headerName: "Email", width: 220 },
-    { field: "phone", headerName: "Phone", width: 150 },
-    { field: "address", headerName: "Address", width: 140 },
     {
         field: "appointmentCount",
         headerName: "Appointments",
@@ -76,9 +73,6 @@ function toPatientRows(patients: PatientGql[]) {
         firstName: p.firstName ?? "",
         lastName: p.lastName ?? "",
         dob: p.dob ?? "",
-        email: p.email ?? "",
-        phone: p.phone ?? "",
-        address: p.address ?? "",
         isComplete: Boolean(p.isComplete),
         appointmentCount: p.appointmentCount ?? 0,
     }));
@@ -116,25 +110,27 @@ export default function PatientListView({ onSelect }: Props) {
     };
 
     return (
-        <div style={{ width: "100%" }}>
-            <DataGrid
-                rows={rows}
-                columns={patientColumns}
-                onRowClick={(params) => onSelect(String(params.id))}
-                onCellClick={handleCellClick}
-                getRowId={(row) => row.id}
-                getRowClassName={(params) => (params.row.isComplete ? "" : "row-incomplete")}
-                sx={{
-                    '& .row-incomplete': {
-                        backgroundColor: 'rgba(180, 31, 2, 0.3)'
-                    }
-                }}
-                initialState={{
-                    pagination: { paginationModel: { pageSize: 10 } },
-                }}
-                pageSizeOptions={[5, 10, 25]}
-                disableRowSelectionOnClick
-            />
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ display: 'inline-block', width: 'auto', maxWidth: '100%' }}>
+                <DataGrid
+                    rows={rows}
+                    columns={patientColumns}
+                    onRowClick={(params) => onSelect(String(params.id))}
+                    onCellClick={handleCellClick}
+                    getRowId={(row) => row.id}
+                    getRowClassName={(params) => (params.row.isComplete ? "" : "row-incomplete")}
+                    sx={{
+                        '& .row-incomplete': {
+                            backgroundColor: 'rgba(180, 31, 2, 0.3)'
+                        }
+                    }}
+                    initialState={{
+                        pagination: { paginationModel: { pageSize: 10 } },
+                    }}
+                    pageSizeOptions={[5, 10, 25]}
+                    disableRowSelectionOnClick
+                />
+            </div>
 
             {isWarningModalOpen && (
                 <div>

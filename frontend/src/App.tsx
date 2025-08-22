@@ -32,7 +32,7 @@ export default function App() {
         <ApolloProvider client={client}>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, height: '100vh', padding: 16, boxSizing: 'border-box' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, height: '100vh', padding: 16, boxSizing: 'border-box' }}>
                     <div style={{ overflow: 'auto' }}>
                         <h2>Patients</h2>
                         <PatientListView onSelect={(id) => setSelectedPatientId(id)} />

@@ -8,14 +8,21 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import PatientDetailCard from "./PatientDetailCard";
 
 const PATIENT_QUERY = gql`
     query GetPatient($id: UUID!) {
         patient(id: $id) {
+            id
             patientId
             firstName
             lastName
+            dob
+            email
+            phone
+            address
             isComplete
+            appointmentCount
             appointments { appointmentId appointmentDate appointmentType }
         }
     }
@@ -33,7 +40,12 @@ type Patient = {
     patientId?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    dob?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
     isComplete: boolean;
+    appointmentCount?: number;
     appointments: Appointment[];
 };
 
@@ -52,6 +64,17 @@ export default function PatientDetailView({ patientId }: Props) {
         skip: !patientId
     });
 
+    function formatDate(dateStr?: string | null): string {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return String(dateStr);
+        return new Intl.DateTimeFormat("en-US", {
+            month: "long",
+            day: "2-digit",
+            year: "numeric",
+        }).format(d);
+    }
+
     // fallbacks
     if (!patientId) return <div>Select a patient to view details.</div>;
     if (loading) return <div>Loading details…</div>;
@@ -62,8 +85,17 @@ export default function PatientDetailView({ patientId }: Props) {
 
     return (
         <div>
-            <div style={{ marginBottom: 12, fontWeight: 600 }}>{p.firstName ?? ''} {p.lastName ?? ''}</div>
+            <PatientDetailCard
+                firstName={p.firstName}
+                lastName={p.lastName}
+                dob={p.dob}
+                email={p.email}
+                phone={p.phone}
+                address={p.address}
+                appointmentCount={p.appointmentCount}
+            />
             <div style={{ marginBottom: 8 }}>Appointments</div>
+            
             <TableContainer component={Paper}>
                 <Table size="small" aria-label="appointments table">
                     <TableHead>
@@ -77,7 +109,7 @@ export default function PatientDetailView({ patientId }: Props) {
                         {(p.appointments ?? []).map((a) => (
                             <TableRow key={a.appointmentId}>
                                 <TableCell>{a.appointmentId}</TableCell>
-                                <TableCell>{a.appointmentDate ?? ''}</TableCell>
+                                <TableCell>{formatDate(a.appointmentDate)}</TableCell>
                                 <TableCell>{a.appointmentType ?? ''}</TableCell>
                             </TableRow>
                         ))}
