@@ -11,7 +11,7 @@ from app.services.patient_services import ingest_patients_from_csv
 class Appointment:
     id: uuid.UUID
     appointment_id: str
-    appointment_date: datetime.datetime
+    appointment_date: Optional[datetime.datetime]
     appointment_type: Optional[str]
 
 @strawberry.type
@@ -19,9 +19,9 @@ class Patient:
     id: uuid.UUID
     patient_id: str
     first_name: Optional[str]
-    last_name: str
-    dob: datetime.date
-    email: str
+    last_name: Optional[str]
+    dob: Optional[datetime.date]
+    email: Optional[str]
     phone: Optional[str]
     address: Optional[str]
     is_complete: bool
@@ -35,6 +35,8 @@ class Patient:
     
     @strawberry.field
     def age(self) -> int:
+        if not self.dob:
+            return 0
         return datetime.datetime.now().year - self.dob.year
     
     @strawberry.field
