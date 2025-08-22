@@ -5,7 +5,7 @@ import strawberry
 
 from app.db.models import Patient as PatientModel, Appointment as AppointmentModel
 from app.db.database import get_db_session
-from app.services.patient_service import ingest_patients_from_csv
+from app.services.patient_services import ingest_patients_from_csv
 
 @strawberry.type
 class Appointment:
@@ -35,7 +35,7 @@ class Patient:
     
     @strawberry.field
     def age(self) -> int:
-        return datetime.now().year - self.dob.year
+        return datetime.datetime.now().year - self.dob.year
     
     @strawberry.field
     def appointment_count(self) -> int:
@@ -44,7 +44,7 @@ class Patient:
 @strawberry.type
 class Query:
     @strawberry.field
-    async def patients(self) -> List[Patient]:
+    async def patients(self, info) -> List[Patient]:
         from sqlalchemy.future import select
         from sqlalchemy.orm import selectinload
         from sqlalchemy.ext.asyncio import AsyncSession

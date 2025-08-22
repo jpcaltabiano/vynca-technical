@@ -18,9 +18,13 @@ import csv
 import re
 import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, ValidationError, validator, EmailStr, root_validator
+from pydantic import BaseModel, ValidationError, validator, EmailStr, model_validator
 from app.db.models import Patient as PatientModel, Appointment as AppointmentModel
 
+FIELDS = [
+    "patient_id","first_name","last_name","dob","email","phone","address",
+    "appointment_id","appointment_date","appointment_type",
+]
 
 # helper cleaners and date parser
 def _clean_email(value: Optional[str]) -> Optional[str]:
@@ -201,7 +205,7 @@ class PatientData(BaseModel):
 	def _validate_dob(cls, v):
 		return _parse_human_date(v)
 
-	@root_validator(pre=False)
+	@model_validator(mode="after")
 	def _set_is_complete(cls, values):
 		values["is_complete"] = _is_complete_patient(values)
 		return values
@@ -230,6 +234,77 @@ class AppointmentData(BaseModel):
 	def _validate_appointment_date(cls, v):
 		return _parse_human_date(v)
 
-def ingest_patients_from_csv(session: AsyncSession):
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    csv_file_path = os.path.join(BASE_DIR, "patients_and_appointments.txt")
+async def ingest_patients_from_csv(session: AsyncSession, path: str):
+
+    def _shape_row(raw, n=10):
+        if len(raw) > n:
+            raw = raw[:n]
+        if len(raw) < n:
+            raw += [""] * (n - len(raw))
+        return raw
+
+    try:
+        patients_by_id = {}
+
+        with open(path, newline="", encoding="utf-8") as f:
+            reader = csv.reader(f)
+            header = next(reader, None)  # skip header
+
+            for raw in reader:
+                row = _shape_row(raw, len(FIELDS))
+                data = dict(zip(FIELDS, row))
+
+                try:
+                    patient = PatientData(
+                        patient_id=data["patient_id"],
+                        first_name=data["first_name"],
+                        last_name=data["last_name"],
+                        dob=data["dob"],
+                        email=data["email"],
+                        phone=data["phone"],
+                        address=data["address"],
+                    )
+                except ValidationError:
+                    # skip bad patient rows
+                    continue
+
+                # ensure one patient per external id
+                if patient.patient_id not in patients_by_id:
+                    new_patient = PatientModel(
+                        patient_id=patient.patient_id,
+                        first_name=patient.first_name,
+                        last_name=patient.last_name,
+                        dob=patient.dob,
+                        email=patient.email,
+                        phone=patient.phone,
+                        address=patient.address,
+                        is_complete=patient.is_complete,
+                    )
+                    session.add(new_patient)
+                    patients_by_id[patient.patient_id] = new_patient
+
+                try:
+                    appt = AppointmentData(
+                        appointment_id=data["appointment_id"],
+                        appointment_date=data["appointment_date"],
+                        appointment_type=data["appointment_type"],
+                    )
+                    if appt.appointment_id or appt.appointment_date or appt.appointment_type:
+                        new_appt = AppointmentModel(
+                            appointment_id=appt.appointment_id,
+                            appointment_date=appt.appointment_date,
+                            appointment_type=appt.appointment_type,
+                            patient=patients_by_id[patient.patient_id],
+                        )
+                        session.add(new_appt)
+                except ValidationError:
+                    # skip bad appointment rows
+                    pass
+
+        await session.commit()
+        print("Data ingestion complete!")
+    except FileNotFoundError:
+        print(f"Error: The file {path} was not found.")
+    except Exception as e:
+        await session.rollback()
+        raise e

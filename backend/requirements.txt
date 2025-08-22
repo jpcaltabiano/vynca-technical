@@ -3,4 +3,5 @@ strawberry-graphql[fastapi]
 sqlalchemy[asyncio]
 aiosqlite
 pydantic
+pydantic[email]
 uvicorn[standard]
